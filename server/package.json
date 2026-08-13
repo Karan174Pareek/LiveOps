@@ -1,0 +1,14 @@
+{
+  "name": "liveops-server",
+  "version": "1.0.0",
+  "description": "LiveOps Server - Real-Time Team Collaboration API & WebSocket Gateway",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest --passWithNoTests"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
