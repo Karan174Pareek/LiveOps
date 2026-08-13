@@ -5,9 +5,10 @@ import { AuthModal } from './components/auth/AuthModal';
 import { WorkspaceSwitcher } from './components/auth/WorkspaceSwitcher';
 import { PresenceBar } from './components/presence/PresenceBar';
 import { KanbanBoard } from './components/board/KanbanBoard';
+import { AiPanel } from './components/ai/AiPanel';
 import { Board, Task } from './types';
 import { api } from './services/api';
-import { LogOut, Sparkles, Plus, FolderKanban } from 'lucide-react';
+import { LogOut, Sparkles, Plus, FolderKanban, Bot } from 'lucide-react';
 
 const DashboardContent: React.FC = () => {
   const { user, activeWorkspace, logout } = useAuth();
@@ -17,6 +18,7 @@ const DashboardContent: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [creatingBoard, setCreatingBoard] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
+  const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
 
   // Fetch workspace boards whenever active workspace changes
   useEffect(() => {
@@ -97,6 +99,17 @@ const DashboardContent: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button
+            className="btn btn-secondary"
+            onClick={() => setIsAiPanelOpen(!isAiPanelOpen)}
+            style={{
+              borderColor: isAiPanelOpen ? 'var(--primary-500)' : 'var(--border-color)',
+              background: isAiPanelOpen ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.05)'
+            }}
+          >
+            <Bot size={16} color="var(--primary-500)" /> AI Copilot
+          </button>
+
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{user.fullName}</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user.email}</div>
@@ -188,7 +201,7 @@ const DashboardContent: React.FC = () => {
         </aside>
 
         {/* Board Main Stage */}
-        <main style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+        <main style={{ flex: 1, padding: '24px', overflowY: 'auto', position: 'relative' }}>
           {activeBoard ? (
             <KanbanBoard board={activeBoard} tasks={tasks} onTasksChange={setTasks} />
           ) : (
@@ -200,6 +213,8 @@ const DashboardContent: React.FC = () => {
               </p>
             </div>
           )}
+
+          <AiPanel boardId={activeBoard?._id} isOpen={isAiPanelOpen} onClose={() => setIsAiPanelOpen(false)} />
         </main>
       </div>
     </div>
