@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import { AuthModal } from './components/auth/AuthModal';
 import { WorkspaceSwitcher } from './components/auth/WorkspaceSwitcher';
+import { PresenceBar } from './components/presence/PresenceBar';
 import { KanbanBoard } from './components/board/KanbanBoard';
 import { Board, Task } from './types';
 import { api } from './services/api';
-import { LogOut, Sparkles, Plus, FolderKanban, AlertCircle } from 'lucide-react';
+import { LogOut, Sparkles, Plus, FolderKanban } from 'lucide-react';
 
 const DashboardContent: React.FC = () => {
   const { user, activeWorkspace, logout } = useAuth();
@@ -90,6 +92,8 @@ const DashboardContent: React.FC = () => {
 
           <div style={{ height: '20px', width: '1px', background: 'var(--border-color)' }} />
           <WorkspaceSwitcher />
+          <div style={{ height: '20px', width: '1px', background: 'var(--border-color)' }} />
+          <PresenceBar />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -205,7 +209,9 @@ const DashboardContent: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <AuthProvider>
-      <DashboardContent />
+      <SocketProvider>
+        <DashboardContent />
+      </SocketProvider>
     </AuthProvider>
   );
 };

@@ -4,40 +4,86 @@ import { TaskCard } from './TaskCard';
 import { CreateTaskModal } from './CreateTaskModal';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { Plus, Layout, RefreshCw, FolderKanban } from 'lucide-react';
+import { useSocket } from '../../context/SocketContext';
+import { Plus, FolderKanban } from 'lucide-react';
 
 interface KanbanBoardProps {
   board: Board;
   tasks: Task[];
-  onTasksChange: (tasks: Task[]) => void;
+  onTasksChange: React.Dispatch<React.SetStateAction<Task[]>>;
 }
 
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({ board, tasks, onTasksChange }) => {
   const { activeWorkspace } = useAuth();
+  const { socket, emitTaskMoved, emitTaskCreated, emitTaskDeleted } = useSocket();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const isGuest = activeWorkspace?.role === 'guest';
 
+  // Attach Socket listeners for real-time Kanban changes
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleSocketTaskMoved = (data: { taskId: string; targetColumn: string }) => {
+      onTasksChange((prev) =>
+        prev.map((t) => (t._id === data.taskId ? { ...t, status: data.targetColumn } : t))
+      );
+    };
+
+    const handleSocketTaskCreated = (data: { task: Task }) => {
+      if (data.task && data.task.boardId === board._id) {
+        onTasksChange((prev) => {
+          if (prev.some((t) => t._id === data.task._id)) return prev;
+          return [...prev, data.task];
+        });
+      }
+    };
+
+    const handleSocketTaskUpdated = (data: { task: Task }) => {
+      if (data.task && data.task.boardId === board._id) {
+        onTasksChange((prev) => prev.map((t) => (t._id === data.task._id ? data.task : t)));
+      }
+    };
+
+    const handleSocketTaskDeleted = (data: { taskId: string }) => {
+      onTasksChange((prev) => prev.filter((t) => t._id !== data.taskId));
+    };
+
+    socket.on('task:moved', handleSocketTaskMoved);
+    socket.on('task:created', handleSocketTaskCreated);
+    socket.on('task:updated', handleSocketTaskUpdated);
+    socket.on('task:deleted', handleSocketTaskDeleted);
+
+    return () => {
+      socket.off('task:moved', handleSocketTaskMoved);
+      socket.off('task:created', handleSocketTaskCreated);
+      socket.off('task:updated', handleSocketTaskUpdated);
+      socket.off('task:deleted', handleSocketTaskDeleted);
+    };
+  }, [socket, board._id, onTasksChange]);
+
   const handleMoveTask = async (taskId: string, newStatus: string) => {
-    const updated = tasks.map((t) => (t._id === taskId ? { ...t, status: newStatus } : t));
-    onTasksChange(updated);
+    const targetTask = tasks.find((t) => t._id === taskId);
+    const sourceColumn = targetTask ? targetTask.status : '';
+
+    onTasksChange((prev) => prev.map((t) => (t._id === taskId ? { ...t, status: newStatus } : t)));
+    emitTaskMoved({ taskId, sourceColumn, targetColumn: newStatus });
 
     try {
       await api.put(`/tasks/${taskId}`, { status: newStatus });
     } catch (error) {
-      console.error('Failed to sync task move:', error);
+      console.error('Failed to sync task move REST:', error);
     }
   };
 
   const handleDeleteTask = async (taskId: string) => {
-    const updated = tasks.filter((t) => t._id !== taskId);
-    onTasksChange(updated);
+    onTasksChange((prev) => prev.filter((t) => t._id !== taskId));
+    emitTaskDeleted(taskId);
 
     try {
       await api.delete(`/tasks/${taskId}`);
     } catch (error) {
-      console.error('Failed to delete task:', error);
+      console.error('Failed to delete task REST:', error);
     }
   };
 
@@ -47,9 +93,10 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ board, tasks, onTasksC
         boardId: board._id,
         ...taskData
       });
-      onTasksChange([...tasks, data]);
+      onTasksChange((prev) => [...prev, data]);
+      emitTaskCreated(data);
     } catch (error) {
-      console.error('Failed to create task:', error);
+      console.error('Failed to create task REST:', error);
     }
   };
 
