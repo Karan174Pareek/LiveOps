@@ -1,38 +1,36 @@
+import { jest } from '@jest/globals';
 import request from 'supertest';
-import mongoose from 'mongoose';
 import app from '../src/app.js';
 import { User } from '../src/models/User.js';
-import { Workspace } from '../src/models/Workspace.js';
-import { UserWorkspaceRole } from '../src/models/UserWorkspaceRole.js';
 
-describe('Authentication & JWT System Endpoints', () => {
-  beforeAll(async () => {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/liveops_test';
-    try {
-      await mongoose.connect(mongoUri);
-    } catch (e) {
-      console.warn('MongoDB not available for tests, proceeding with mock fallback');
-    }
-  });
-
-  afterAll(async () => {
-    if (mongoose.connection.readyState !== 0) {
-      await User.deleteMany({ email: /@test\.com$/ });
-      await mongoose.connection.close();
-    }
-  });
-
-  it('GET /health returns healthy status', async () => {
+describe('Production Health & Authentication Endpoints', () => {
+  it('GET /health returns status 200 OK and healthy state', async () => {
     const res = await request(app).get('/health');
     expect(res.statusCode).toEqual(200);
     expect(res.body.status).toEqual('healthy');
+    expect(res.body.timestamp).toBeDefined();
   });
 
-  it('POST /auth/register fails if required fields are missing', async () => {
-    const res = await request(app).post('/auth/register').send({
-      email: 'invalid'
-    });
+  it('POST /auth/register rejects missing payload fields with 400', async () => {
+    const res = await request(app).post('/auth/register').send({});
     expect(res.statusCode).toEqual(400);
+    expect(res.body.error).toMatch(/required/i);
+  });
+
+  it('POST /auth/login rejects invalid credentials with 400/401', async () => {
+    jest.spyOn(User, 'findOne').mockImplementationOnce(() => Promise.resolve(null));
+    const res = await request(app).post('/auth/login').send({
+      email: 'nonexistent@company.com',
+      password: 'wrongpassword'
+    });
+    expect([400, 401]).toContain(res.statusCode);
+    expect(res.body.error).toBeDefined();
+    User.findOne.mockRestore();
+  });
+
+  it('POST /auth/refresh rejects request without refresh token cookie with 401', async () => {
+    const res = await request(app).post('/auth/refresh');
+    expect(res.statusCode).toEqual(401);
     expect(res.body.error).toBeDefined();
   });
 });

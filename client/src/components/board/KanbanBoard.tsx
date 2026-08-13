@@ -148,7 +148,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({ board, tasks, onTasksC
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'space-between',
+                  justifyContent: 'space-between',
                   marginBottom: '14px',
                   paddingBottom: '10px',
                   borderBottom: '1px solid var(--border-color)'

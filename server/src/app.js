@@ -6,6 +6,7 @@ import authRouter from './routes/auth.js';
 import boardsRouter from './routes/boards.js';
 import tasksRouter from './routes/tasks.js';
 import aiRouter from './routes/ai.js';
+import { apiWriteRateLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
 
@@ -21,7 +22,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 if (process.env.NODE_ENV !== 'test') {
-  app.use(morgan('dev'));
+  app.use(morgan('combined'));
 }
 
 // Health check endpoint
@@ -32,18 +33,19 @@ app.get('/health', (req, res) => {
 // Authentication Routes
 app.use('/auth', authRouter);
 
-// Domain Resource Routes (Workspace Scoped)
-app.use('/boards', boardsRouter);
-app.use('/tasks', tasksRouter);
+// Domain Resource Routes (Workspace Scoped & Rate-Limited on Write)
+app.use('/boards', apiWriteRateLimiter, boardsRouter);
+app.use('/tasks', apiWriteRateLimiter, tasksRouter);
 
 // AI Layer Routes (Claude API Integration)
-app.use('/ai', aiRouter);
+app.use('/ai', apiWriteRateLimiter, aiRouter);
 
-// Centralized error handling middleware
+// Centralized error handling middleware (Sanitizes raw stack traces in production)
 app.use((err, req, res, next) => {
-  console.error('[Error Middleware]:', err.stack);
-  res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
+  console.error('[Production Error Handler]:', err);
+  const statusCode = err.status || 500;
+  res.status(statusCode).json({
+    error: process.env.NODE_ENV === 'production' ? 'Internal server error occurred.' : err.message
   });
 });
 
