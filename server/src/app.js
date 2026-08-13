@@ -3,6 +3,8 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import authRouter from './routes/auth.js';
+import boardsRouter from './routes/boards.js';
+import tasksRouter from './routes/tasks.js';
 
 const app = express();
 
@@ -28,6 +30,10 @@ app.get('/health', (req, res) => {
 
 // Authentication Routes
 app.use('/auth', authRouter);
+
+// Domain Resource Routes (Workspace Scoped)
+app.use('/boards', boardsRouter);
+app.use('/tasks', tasksRouter);
 
 // Centralized error handling middleware
 app.use((err, req, res, next) => {
