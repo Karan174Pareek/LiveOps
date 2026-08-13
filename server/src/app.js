@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import authRouter from './routes/auth.js';
 import boardsRouter from './routes/boards.js';
 import tasksRouter from './routes/tasks.js';
+import aiRouter from './routes/ai.js';
 
 const app = express();
 
@@ -34,6 +35,9 @@ app.use('/auth', authRouter);
 // Domain Resource Routes (Workspace Scoped)
 app.use('/boards', boardsRouter);
 app.use('/tasks', tasksRouter);
+
+// AI Layer Routes (Claude API Integration)
+app.use('/ai', aiRouter);
 
 // Centralized error handling middleware
 app.use((err, req, res, next) => {
