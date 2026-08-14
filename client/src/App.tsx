@@ -8,7 +8,7 @@ import { KanbanBoard } from './components/board/KanbanBoard';
 import { AiPanel } from './components/ai/AiPanel';
 import { Board, Task } from './types';
 import { api } from './services/api';
-import { LogOut, Sparkles, Plus, FolderKanban, Bot } from 'lucide-react';
+import { LogOut, Sparkles, Plus, FolderKanban, Bot, Layers, History, Users, GitBranch } from 'lucide-react';
 
 const DashboardContent: React.FC = () => {
   const { user, activeWorkspace, logout } = useAuth();
@@ -19,6 +19,7 @@ const DashboardContent: React.FC = () => {
   const [creatingBoard, setCreatingBoard] = useState(false);
   const [newBoardName, setNewBoardName] = useState('');
   const [isAiPanelOpen, setIsAiPanelOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'boards' | 'activity' | 'members'>('boards');
 
   // Fetch workspace boards whenever active workspace changes
   useEffect(() => {
@@ -81,81 +82,106 @@ const DashboardContent: React.FC = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* Top Header Navigation */}
-      <header className="glass-panel" style={{ borderRadius: 0, padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-dark)' }}>
+      {/* Stitch Navigation Header */}
+      <header className="glass-panel" style={{ borderRadius: 0, padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-surface)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          {/* Logo & Brand */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'linear-gradient(135deg, var(--primary-500), var(--secondary-500))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Sparkles size={18} color="#fff" />
+            <div style={{ width: '28px', height: '28px', borderRadius: '4px', background: 'var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Sparkles size={16} color="#fff" />
             </div>
-            <span style={{ fontWeight: 700, fontSize: '1.1rem', letterSpacing: '-0.02em' }}>LiveOps</span>
+            <span style={{ fontFamily: 'var(--font-heading)', fontWeight: 700, fontSize: '1.05rem', letterSpacing: '-0.02em' }}>LiveOps</span>
           </div>
 
-          <div style={{ height: '20px', width: '1px', background: 'var(--border-color)' }} />
+          <div style={{ height: '18px', width: '1px', background: 'var(--border-color)' }} />
           <WorkspaceSwitcher />
-          <div style={{ height: '20px', width: '1px', background: 'var(--border-color)' }} />
-          <PresenceBar />
+
+          {/* Stitch Section Navigation Tabs */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '8px' }}>
+            <button
+              onClick={() => setActiveTab('boards')}
+              className="btn"
+              style={{
+                padding: '6px 10px',
+                fontSize: '0.8rem',
+                color: activeTab === 'boards' ? '#fff' : 'var(--text-muted)',
+                background: activeTab === 'boards' ? 'rgba(255,255,255,0.06)' : 'transparent',
+                borderRadius: 'var(--radius-sm)'
+              }}
+            >
+              <FolderKanban size={14} color={activeTab === 'boards' ? 'var(--primary-container)' : 'var(--text-muted)'} /> Boards
+            </button>
+
+            <button
+              onClick={() => setIsAiPanelOpen(!isAiPanelOpen)}
+              className="btn"
+              style={{
+                padding: '6px 10px',
+                fontSize: '0.8rem',
+                color: isAiPanelOpen ? 'var(--tertiary)' : 'var(--text-muted)',
+                background: isAiPanelOpen ? 'rgba(183, 109, 255, 0.15)' : 'transparent',
+                borderRadius: 'var(--radius-sm)'
+              }}
+            >
+              <Bot size={14} color="var(--tertiary)" /> AI Insights
+            </button>
+          </nav>
         </div>
 
+        {/* Right Header Status & Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <button
-            className="btn btn-secondary"
-            onClick={() => setIsAiPanelOpen(!isAiPanelOpen)}
-            style={{
-              borderColor: isAiPanelOpen ? 'var(--primary-500)' : 'var(--border-color)',
-              background: isAiPanelOpen ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.05)'
-            }}
-          >
-            <Bot size={16} color="var(--primary-500)" /> AI Copilot
-          </button>
+          <PresenceBar />
+
+          <div style={{ height: '18px', width: '1px', background: 'var(--border-color)' }} />
 
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{user.fullName}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user.email}</div>
+            <div style={{ fontWeight: 600, fontSize: '0.825rem' }}>{user.fullName}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-muted)' }}>{user.email}</div>
           </div>
-          <button className="btn btn-secondary" onClick={logout} style={{ padding: '8px 12px' }}>
-            <LogOut size={16} /> Sign Out
+
+          <button className="btn btn-secondary" onClick={logout} style={{ padding: '6px 10px', fontSize: '0.8rem' }}>
+            <LogOut size={14} />
           </button>
         </div>
       </header>
 
-      {/* Main Workspace Area */}
+      {/* Main Workspace Stage */}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {/* Left Sidebar Board List */}
-        <aside className="glass-panel" style={{ width: '260px', borderRadius: 0, borderTop: 0, borderBottom: 0, borderLeft: 0, padding: '20px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>
+        <aside className="glass-panel" style={{ width: '240px', borderRadius: 0, borderTop: 0, borderBottom: 0, borderLeft: 0, padding: '16px', display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>
               Workspace Boards
             </span>
             {activeWorkspace?.role !== 'guest' && (
               <button
                 onClick={() => setCreatingBoard(true)}
-                style={{ background: 'none', border: 'none', color: 'var(--primary-500)', cursor: 'pointer', padding: '2px' }}
+                style={{ background: 'none', border: 'none', color: 'var(--primary-container)', cursor: 'pointer', padding: '2px' }}
                 title="Create Board"
               >
-                <Plus size={16} />
+                <Plus size={15} />
               </button>
             )}
           </div>
 
           {creatingBoard && (
-            <form onSubmit={handleCreateBoard} style={{ marginBottom: '16px' }}>
+            <form onSubmit={handleCreateBoard} style={{ marginBottom: '14px' }}>
               <input
                 type="text"
                 className="form-input"
-                placeholder="Board title..."
+                placeholder="Board name..."
                 value={newBoardName}
                 onChange={(e) => setNewBoardName(e.target.value)}
                 autoFocus
                 required
-                style={{ marginBottom: '8px' }}
+                style={{ marginBottom: '6px', fontSize: '0.8rem' }}
               />
               <div style={{ display: 'flex', gap: '6px' }}>
-                <button type="submit" className="btn btn-primary" style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
+                <button type="submit" className="btn btn-primary" style={{ padding: '4px 8px', fontSize: '0.725rem' }}>
                   Save
                 </button>
-                <button type="button" className="btn btn-secondary" onClick={() => setCreatingBoard(false)} style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setCreatingBoard(false)} style={{ padding: '4px 8px', fontSize: '0.725rem' }}>
                   Cancel
                 </button>
               </div>
@@ -164,8 +190,8 @@ const DashboardContent: React.FC = () => {
 
           <div style={{ flex: 1, overflowY: 'auto' }}>
             {boards.length === 0 ? (
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', textAlign: 'center', padding: '20px 0' }}>
-                No boards in this workspace. Create one to get started!
+              <div style={{ fontSize: '0.775rem', color: 'var(--text-dim)', textAlign: 'center', padding: '20px 0' }}>
+                No boards found. Create one to start!
               </div>
             ) : (
               boards.map((b) => {
@@ -178,21 +204,21 @@ const DashboardContent: React.FC = () => {
                       width: '100%',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '10px',
-                      padding: '10px 12px',
-                      marginBottom: '6px',
+                      gap: '8px',
+                      padding: '8px 10px',
+                      marginBottom: '4px',
                       borderRadius: 'var(--radius-sm)',
                       border: '1px solid',
-                      borderColor: isActive ? 'var(--primary-500)' : 'transparent',
-                      background: isActive ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+                      borderColor: isActive ? 'var(--primary-container)' : 'transparent',
+                      background: isActive ? 'rgba(128, 131, 255, 0.12)' : 'transparent',
                       color: isActive ? '#fff' : 'var(--text-muted)',
                       cursor: 'pointer',
                       textAlign: 'left',
                       fontWeight: isActive ? 600 : 400
                     }}
                   >
-                    <FolderKanban size={16} color={isActive ? 'var(--primary-500)' : 'var(--text-muted)'} />
-                    <span style={{ fontSize: '0.875rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name}</span>
+                    <FolderKanban size={14} color={isActive ? 'var(--primary-container)' : 'var(--text-muted)'} />
+                    <span style={{ fontSize: '0.825rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name}</span>
                   </button>
                 );
               })
@@ -201,14 +227,14 @@ const DashboardContent: React.FC = () => {
         </aside>
 
         {/* Board Main Stage */}
-        <main style={{ flex: 1, padding: '24px', overflowY: 'auto', position: 'relative' }}>
+        <main style={{ flex: 1, padding: '20px', overflowY: 'auto', position: 'relative' }}>
           {activeBoard ? (
             <KanbanBoard board={activeBoard} tasks={tasks} onTasksChange={setTasks} />
           ) : (
-            <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '500px', margin: '60px auto' }}>
-              <FolderKanban size={48} color="var(--primary-500)" style={{ marginBottom: '16px' }} />
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '8px' }}>No Board Selected</h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+            <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '480px', margin: '60px auto' }}>
+              <FolderKanban size={40} color="var(--primary-container)" style={{ marginBottom: '14px' }} />
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '6px' }}>No Board Selected</h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.825rem' }}>
                 Select a board from the left sidebar or create a new board to start collaborating with your team.
               </p>
             </div>
