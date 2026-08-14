@@ -6,9 +6,19 @@ import { UserWorkspaceRole } from '../models/UserWorkspaceRole.js';
 const activePresence = new Map();
 
 export const initSocketManager = (httpServer) => {
+  const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173,http://localhost:5174')
+    .split(',')
+    .map((url) => url.trim());
+
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:5173',
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+          callback(null, true);
+        } else {
+          callback(null, true);
+        }
+      },
       credentials: true
     }
   });
@@ -64,8 +74,6 @@ export const initSocketManager = (httpServer) => {
 
       // Broadcast presence updates
       io.to(roomName).emit('presence:update', Array.from(workspacePresence.values()));
-
-      // Broadcast single online presence event
       socket.to(roomName).emit('presence:online', { userId, fullName, email, timestamp: new Date().toISOString() });
     }
 
@@ -77,7 +85,6 @@ export const initSocketManager = (httpServer) => {
           return socket.emit('error', { message: 'Access denied to target workspace.' });
         }
 
-        // Leave existing workspace room if any
         if (socket.workspaceId) {
           const oldRoom = `workspace:${socket.workspaceId}`;
           socket.leave(oldRoom);
@@ -137,7 +144,7 @@ export const initSocketManager = (httpServer) => {
       });
     });
 
-    // Event: Live Cursor Movement (Throttled by client)
+    // Event: Live Cursor Movement
     socket.on('cursor:move', (data) => {
       if (!socket.workspaceId) return;
       socket.to(`workspace:${socket.workspaceId}`).emit('cursor:move', {

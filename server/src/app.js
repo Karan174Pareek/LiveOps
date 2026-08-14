@@ -10,9 +10,19 @@ import { apiWriteRateLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
 
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173,http://localhost:5174')
+  .split(',')
+  .map((url) => url.trim());
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
     credentials: true
   })
 );
@@ -22,7 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 if (process.env.NODE_ENV !== 'test') {
-  app.use(morgan('combined'));
+  app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 }
 
 // Health check endpoint
@@ -40,7 +50,7 @@ app.use('/tasks', apiWriteRateLimiter, tasksRouter);
 // AI Layer Routes (Claude API Integration)
 app.use('/ai', apiWriteRateLimiter, aiRouter);
 
-// Centralized error handling middleware (Sanitizes raw stack traces in production)
+// Centralized error handling middleware
 app.use((err, req, res, next) => {
   console.error('[Production Error Handler]:', err);
   const statusCode = err.status || 500;
