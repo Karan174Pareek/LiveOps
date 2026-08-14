@@ -1,0 +1,62 @@
+name: LiveOps Automated Test Suite
+
+on:
+  push:
+    branches: ['*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend-tests:
+    name: Backend Server Jest & Supertest Suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'server/package-lock.json'
+
+      - name: Install Server Dependencies
+        run: |
+          cd server
+          npm ci
+
+      - name: Execute Server Jest Tests
+        run: |
+          cd server
+          npm test
+        env:
+          NODE_ENV: test
+          JWT_ACCESS_SECRET: test_jwt_access_secret_32bytes_minimum_key
+          JWT_REFRESH_SECRET: test_jwt_refresh_secret_32bytes_minimum_key
+
+  frontend-build:
+    name: Frontend Client TypeScript & Bundle Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'client/package-lock.json'
+
+      - name: Install Client Dependencies
+        run: |
+          cd client
+          npm ci
+
+      - name: Build Production Client Assets
+        run: |
+          cd client
+          npm run build
