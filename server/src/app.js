@@ -40,15 +40,20 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-// Authentication Routes
+// Authentication Routes (Supports both /auth and /api/auth prefixes)
 app.use('/auth', authRouter);
+app.use('/api/auth', authRouter);
 
 // Domain Resource Routes (Workspace Scoped & Rate-Limited on Write)
 app.use('/boards', apiWriteRateLimiter, boardsRouter);
+app.use('/api/boards', apiWriteRateLimiter, boardsRouter);
+
 app.use('/tasks', apiWriteRateLimiter, tasksRouter);
+app.use('/api/tasks', apiWriteRateLimiter, tasksRouter);
 
 // AI Layer Routes (Claude API Integration)
 app.use('/ai', apiWriteRateLimiter, aiRouter);
+app.use('/api/ai', apiWriteRateLimiter, aiRouter);
 
 // Centralized error handling middleware
 app.use((err, req, res, next) => {
