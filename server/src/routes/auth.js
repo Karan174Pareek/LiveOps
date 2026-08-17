@@ -16,7 +16,7 @@ const router = express.Router();
 // Rate limiter for authentication routes (login/register)
 export const loginRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 15, // Max 15 attempts per IP per 15 minutes
+  max: 1000, // Max 1000 attempts per IP per 15 minutes
   message: { error: 'Too many authentication attempts from this IP, please try again after 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false
@@ -187,31 +187,26 @@ router.post('/refresh', async (req, res) => {
       return res.status(401).json({ error: 'Invalid or expired refresh token.' });
     }
 
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      return res.status(401).json({ error: 'User associated with token no longer exists.' });
-    }
-
     const incomingHash = hashToken(refreshToken);
-    const tokenIndex = user.refreshTokens.findIndex((t) => t.tokenHash === incomingHash);
 
-    if (tokenIndex === -1) {
-      // Possible token reuse attack detected: clear all refresh tokens for safety
-      user.refreshTokens = [];
-      await user.save();
-      res.clearCookie('refreshToken', COOKIE_OPTIONS);
-      return res.status(403).json({ error: 'Token reuse detected. Session revoked for security.' });
+    // Atomically pull the matching refresh token to prevent race conditions
+    const user = await User.findOneAndUpdate(
+      { _id: decoded.userId, 'refreshTokens.tokenHash': incomingHash },
+      { $pull: { refreshTokens: { tokenHash: incomingHash } } },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid refresh token or session expired.' });
     }
-
-    // Rotate: remove used refresh token and insert a new one
-    user.refreshTokens.splice(tokenIndex, 1);
 
     const newAccessToken = generateAccessToken(user);
     const newRefreshToken = generateRefreshToken(user);
     const newHash = hashToken(newRefreshToken);
 
-    user.refreshTokens.push({ tokenHash: newHash });
-    await user.save();
+    await User.findByIdAndUpdate(user._id, {
+      $push: { refreshTokens: { tokenHash: newHash } }
+    });
 
     res.cookie('refreshToken', newRefreshToken, COOKIE_OPTIONS);
 

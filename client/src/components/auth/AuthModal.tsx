@@ -59,7 +59,7 @@ export const AuthModal: React.FC = () => {
               <input
                 type="text"
                 className="form-input"
-                placeholder="Alex Rivera"
+                placeholder="Karan Pareek"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
@@ -72,7 +72,7 @@ export const AuthModal: React.FC = () => {
             <input
               type="email"
               className="form-input"
-              placeholder="alex@company.com"
+              placeholder="karan@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
