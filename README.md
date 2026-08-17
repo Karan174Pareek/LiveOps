@@ -6,6 +6,32 @@
 
 > **LiveOps** is a production-grade, multi-tenant, real-time team collaboration platform built with the MERN stack (MongoDB, Express, React, Node.js), Socket.io real-time room synchronization, and Anthropic Claude AI workspace intelligence.
 
+![LiveOps Real-Time Board Dashboard](docs/screenshots/dashboard-overview.png)
+
+---
+
+## 📸 Interface & Feature Highlights
+
+### ⚡ Real-Time Kanban Board Dashboard
+Custom glassmorphic dark interface supporting real-time WebSocket state synchronization, task priority badges, assignee tags, and status tracking across columns (`Backlog`, `To Do`, `In Progress`, `Review`, `Done`).
+
+![LiveOps Dashboard Overview](docs/screenshots/dashboard-overview.png)
+
+### 🤖 Anthropic Claude AI Intelligence Panel
+Integrated AI workspace copilot providing automated 24-hour team standup activity summaries and AI task prioritization suggestions.
+
+![AI Intelligence Panel Drawer](docs/screenshots/ai-intelligence-panel.png)
+
+### 📝 Task Creation & Workflow Operations
+Modal interface for creating and updating tasks with title, rich description, target column status, and priority indicators.
+
+![Create Task Modal Interface](docs/screenshots/create-task-modal.png)
+
+### 🔑 Secure Dual-Token Authentication
+Glassmorphic authentication interface supporting registration, multi-tenant workspace provisioning, and `httpOnly` secure dual-token authentication.
+
+![Authentication & Registration Interface](docs/screenshots/authentication-screen.png)
+
 ---
 
 ## 🌟 Key Architecture & Features

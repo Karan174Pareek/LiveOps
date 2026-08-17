@@ -66,7 +66,6 @@ export const AiPanel: React.FC<AiPanelProps> = ({ boardId, isOpen, onClose }) =>
             </div>
             <div>
               <h3 style={{ fontSize: '1rem', fontWeight: 700, fontFamily: 'var(--font-heading)' }}>LiveOps AI Copilot</h3>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Powered by Claude 3.5 Sonnet</div>
             </div>
           </div>
 
